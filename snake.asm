@@ -29,6 +29,10 @@ addi    sp, zero, LEDS
 ; return values
 ;     This procedure should never return.
 main:
+call clear_leds
+addi a0, a0,0x09
+addi a1,a1,0x07
+call set_pixel
     ; TODO: Finish this procedure.
 
     ret
@@ -36,6 +40,11 @@ main:
 
 ; BEGIN: clear_leds
 clear_leds:
+
+stw zero, LEDS(t0)
+stw zero, (LEDS+4)(t0)
+stw zero, (LEDS+8)(t0)
+ret
 
 ; END: clear_leds
 
@@ -51,7 +60,7 @@ set_pixel:
 	bge a0, t0, set_pixel_2
 	addi t0, zero, 0x04
 	bge a0, t0, set_pixel_1
-	set_pixel_0
+	jmpi set_pixel_0
 	ret
 set_pixel_2:
 	ldw t3, (LEDS+0x0008)(zero)

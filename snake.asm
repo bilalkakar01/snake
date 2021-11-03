@@ -30,8 +30,8 @@ addi    sp, zero, LEDS
 ;     This procedure should never return.
 main:
 call clear_leds
-addi a0, a0,0x09
-addi a1,a1,0x07
+addi a0, zero, 0x09
+addi a1, zero, 0x07
 call set_pixel
     ; TODO: Finish this procedure.
 

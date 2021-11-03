@@ -42,7 +42,33 @@ clear_leds:
 
 ; BEGIN: set_pixel
 set_pixel:
-
+	andi t1, a0, 0x03
+	slli t1, t1, 0x03
+	add t1, t1, a1 
+	addi t2, zero, 0x01
+	sll t2, t2, t1
+	addi t0, zero, 0x08
+	bge a0, t0, set_pixel_2
+	addi t0, zero, 0x04
+	bge a0, t0, set_pixel_1
+	set_pixel_0
+	ret
+set_pixel_2:
+	ldw t3, (LEDS+0x0008)(zero)
+	or t3, t3, t2
+	stw t3, (LEDS+0x0008)(zero)
+	ret
+set_pixel_1:
+	ldw t3, (LEDS+0x0004)(zero)
+	or t3, t3, t2
+	stw t3, (LEDS+0x0004)(zero)
+	ret
+set_pixel_0:
+	ldw t3, (LEDS)(zero)
+	or t3, t3, t2
+	stw t3, (LEDS)(zero)
+	ret
+	ret
 ; END: set_pixel
 
 

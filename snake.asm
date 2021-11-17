@@ -132,8 +132,6 @@ hit_test:
 
 ; BEGIN: get_input
 get_input:
-<<<<<<< HEAD
-=======
 	ldw t0, (BUTTONS + 0x0004)(zero) ; store edgecapture in t0
 	stw zero, (BUTTONS + 0x0004)(zero) ; clear edgecapture
 	addi t1, zero, 0x01 ; create a mask (0x01) in t1
@@ -149,8 +147,8 @@ get_input:
 	beq t6, t1, checkpoint_pressed ; first check if checkpoint was pressed (highest priority)
 	ldw t0, (HEAD_X)(zero) ; store HEAD_X in t0
 	ldw t7, (HEAD_Y)(zero) ; store HEAD_Y in t7
-	slli t0, t0, 0X03 ; multiply t0 by 8
-	add t7, t7, HEAD_Y ; add t7 to it
+	slli t0, t0, 0x03 ; multiply t0 by 8
+	add t7, t0, t7 ; add t7 to it
 	slli t0, t7, 0x02 ; mutliply it by 4 to get the address in memory and store it in t0
 	ldw t7, (GSA)(t0) ; store the value of snake's head in t7
 	beq t2, t1, left_pressed ; check the other buttons (order doesn't matter)
@@ -165,37 +163,39 @@ checkpoint_pressed:
 left_pressed:
 	addi v0, zero, 0x01 ; set v0 to 1
 	addi t1, zero, 0x04 ; set t1 to 4 (right)
-	bne t7, t1, snake_head_left
+	bne t7, t1, snake_head_left ; check that snake is not currently heading right
 	ret
 snake_head_left:
-	stw 0x01, (GSA)(t0)
+	addi t6, zero, 0x01
+	stw t6, (GSA)(t0) ; sets snake's head direction to left
 	ret 
 up_pressed:
 	addi v0, zero, 0x02 ; set v0 to 2
 	addi t1, zero, 0x03 ; set t1 to 3 (down)
-	bne t7, t1, snake_head_up
+	bne t7, t1, snake_head_up ; check that snake is not currently heading down
 	ret
 snake_head_up:
-	stw 0x02, (GSA)(t0)
+	addi t6, zero, 0x02
+	stw t6, (GSA)(t0) ; sets snake's head direction to up
 	ret
 down_pressed:
 	addi v0, zero, 0x03 ; set v0 to 3
 	addi t1, zero, 0x02 ; set t1 to 2 (up)
-	bne t7, t1, snake_head_down
+	bne t7, t1, snake_head_down ; check that snake is not currently heading up
 	ret
 snake_head_down:
-	stw 0x03, (GSA)(t0)
+	addi t6, zero, 0x03
+	stw t6, (GSA)(t0) ; sets snake's head direction to down
 	ret
 right_pressed:
 	addi v0, zero, 0x04 ; set v0 to 4
 	addi t1, zero, 0x01 ; set t1 to 1 (up)
-	bne t7, t1, snake_head_right
+	bne t7, t1, snake_head_right ; check that snake is not currently heading left
 	ret
 snake_head_right:
-	stw 0x04, (GSA)(t0)
+	addi t6, zero, 0x04
+	stw t6, (GSA)(t0) ; sets snake's head direction to right
 	ret
->>>>>>> 00b811571c5d8b45ce185d9e4be1ac5691db351e
-
 ; END: get_input
 
 

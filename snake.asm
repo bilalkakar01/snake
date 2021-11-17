@@ -132,66 +132,6 @@ hit_test:
 
 ; BEGIN: get_input
 get_input:
-	ldw t0, (BUTTONS + 0x0004)(zero) ; store edgecapture in t0
-	stw zero, (BUTTONS + 0x0004)(zero) ; clear edgecapture
-	addi t1, zero, 0x01 ; create a mask (0x01) in t1
-	and t2, t0, t1 ; store bit 0 (left button) of edgecapture in t2
-	srli t0, t0, 0x01 ; shiftright edgecapture by 1
-	and t3, t0, t1 ; store bit 1 (up button) of edgecapture in t3
-	srli t0, t0, 0x01 ; shiftright edgecapture by 1
-	and t4, t0, t1 ; store bit 2 (down button) of edgecapture in t4
-	srli t0, t0, 0x01 ; shiftright edgecapture by 1
-	and t5, t0, t1 ; store bit 3 (right button) of edgecapture in t5
-	srli t0, t0, 0x01 ; shiftright edgecapture by 1
-	and t6, t0, t1 ; store bit 4 (checkpoint button) of edgecapture in t6
-	beq t6, t1, checkpoint_pressed ; first check if checkpoint was pressed (highest priority)
-	ldw t0, (HEAD_X)(zero) ; store HEAD_X in t0
-	ldw t7, (HEAD_Y)(zero) ; store HEAD_Y in t7
-	slli t0, t0, 0X03 ; multiply t0 by 8
-	add t7, t7, HEAD_Y ; add t7 to it
-	slli t0, t7, 0x02 ; mutliply it by 4 to get the address in memory and store it in t0
-	ldw t7, (GSA)(t0) ; store the value of snake's head in t7
-	beq t2, t1, left_pressed ; then check the other buttons (order doesn't matter)
-	beq t3, t1, up_pressed
-	beq t4, t1, down_pressed
-	beq t5, t1, right_pressed
-	addi v0, zero, 0x00 ; no button pressed so set v0 to 0
-	ret
-checkpoint_pressed:
-	addi v0, zero, 0x05 ; set v0 to 5
-	ret
-left_pressed:
-	addi v0, zero, 0x01 ; set v0 to 1
-	addi t1, zero, 0x04 ; set t1 to 4 (right)
-	bne t7, t1, snake_head_left
-	ret
-snake_head_left:
-	stw 0x01, (GSA)(t0)
-	ret 
-up_pressed:
-	addi v0, zero, 0x02 ; set v0 to 2
-	addi t1, zero, 0x03 ; set t1 to 3 (down)
-	bne t7, t1, snake_head_up
-	ret
-snake_head_up:
-	stw 0x02, (GSA)(t0)
-	ret
-down_pressed:
-	addi v0, zero, 0x03 ; set v0 to 3
-	addi t1, zero, 0x02 ; set t1 to 2 (up)
-	bne t7, t1, snake_head_down
-	ret
-snake_head_down:
-	stw 0x03, (GSA)(t0)
-	ret
-right_pressed:
-	addi v0, zero, 0x04 ; set v0 to 4
-	addi t1, zero, 0x01 ; set t1 to 1 (up)
-	bne t7, t1, snake_head_right
-	ret
-snake_head_right:
-	stw 0x04, (GSA)(t0)
-	ret
 
 ; END: get_input
 
@@ -204,6 +144,59 @@ draw_array:
 
 ; BEGIN: move_snake
 move_snake:
+stw t0, HEAD_X(zero) ; store the Head_x in t0
+stw t2, HEAD_Y(zero) ; store the head_y in t2
+stw t6, TAIL_X(zero); t6: tail_x
+stw t7, TAIL_Y(zero); t7: tail_y
+	;get the head direction vector from GSA 
+slli t3,t0, 0x03
+add t3,t3,t2
+slli t3, t3, 0x02
+ldw t3, GSA(t3) ; t3: direction of snake's head
+	;compare if the direction is leftward,upward,downward or rightward
+addi t4, zero, 0x01
+beq t3,t4, leftwards
+addi t4, zero, 0x02
+beq t3,t4, upwards
+addi t4, zero, 0x03
+beq t3, t4, downwards
+	;if rightward
+addi t0, t0, 0x01
+addi t6, t6,0x01  ; t6: tail_x
+
+addi t4, zero, 0x01
+jmpi update
+
+update:
+
+; update the new head pos in GSA
+slli t5, t0, 0x03 ; t0: head_x
+add t5, t5, t2 ; t5: new position of snake's head, t2: head_y
+slli t5, t5, 0x02
+stw t3, GSA(t5)
+; update the new tail pos in GSA
+slli t5, t6, 0x03 ; t5: new pos of snake tail, t6: tail_x
+add t5, t5,t7  ;  t7: tail_y
+slli t5,t5,0x02
+stw t3, GSA(t5)
+
+leftwards:
+sub t0, t0,t4   ; t0 : head_x of the snake
+sub t6, t6, t4 ; t6: tail_x
+jmpi update
+ 
+
+upwards:
+addi t2, t2, 0x02 ; t2: head_y of the snake
+addi t7, t7, 0x01 ; t7: tail_y
+jmpi update
+
+
+downwards:
+sub t2, t2,t4
+sub t7, t7, t4
+jmpi update
+
 
 ; END: move_snake
 

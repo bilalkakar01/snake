@@ -151,7 +151,7 @@ get_input:
 	add t7, t7, HEAD_Y ; add t7 to it
 	slli t0, t7, 0x02 ; mutliply it by 4 to get the address in memory and store it in t0
 	ldw t7, (GSA)(t0) ; store the value of snake's head in t7
-	beq t2, t1, left_pressed ; then check the other buttons (order doesn't matter)
+	beq t2, t1, left_pressed ; check the other buttons (order doesn't matter)
 	beq t3, t1, up_pressed
 	beq t4, t1, down_pressed
 	beq t5, t1, right_pressed

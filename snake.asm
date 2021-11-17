@@ -1,4 +1,4 @@
-;	set game state memory location
+;    set game state memory location
 .equ    HEAD_X,         0x1000  ; Snake head's position on x
 .equ    HEAD_Y,         0x1004  ; Snake head's position on y
 .equ    TAIL_X,         0x1008  ; Snake tail's position on x
@@ -18,6 +18,31 @@
 .equ    SEVEN_SEGS,     0x1198  ; 7-segment display addresses
 .equ    RANDOM_NUM,     0x2010  ; Random number generator address
 .equ    BUTTONS,        0x2030  ; Buttons addresses
+
+; button state
+.equ    BUTTON_NONE,    0
+.equ    BUTTON_LEFT,    1
+.equ    BUTTON_UP,      2
+.equ    BUTTON_DOWN,    3
+.equ    BUTTON_RIGHT,   4
+.equ    BUTTON_CHECKPOINT,    5
+
+; array state
+.equ    DIR_LEFT,       1       ; leftward direction
+.equ    DIR_UP,         2       ; upward direction
+.equ    DIR_DOWN,       3       ; downward direction
+.equ    DIR_RIGHT,      4       ; rightward direction
+.equ    FOOD,           5       ; food
+
+; constants
+.equ    NB_ROWS,        8       ; number of rows
+.equ    NB_COLS,        12      ; number of columns
+.equ    NB_CELLS,       96      ; number of cells in GSA
+.equ    RET_ATE_FOOD,   1       ; return value for hit_test when food was eaten
+.equ    RET_COLLISION,  2       ; return value for hit_test when a collision was detected
+.equ    ARG_HUNGRY,     0       ; a0 argument for move_snake when food wasn't eaten
+.equ    ARG_FED,        1       ; a0 argument for move_snake when food was eaten
+
 
 ; initialize stack pointer
 addi    sp, zero, LEDS

@@ -145,6 +145,52 @@ stw t4,GSA(t0)
 
 ; BEGIN: hit_test
 hit_test:
+stw t0, HEAD_X(zero)
+stw t1, HEAD_Y(zero)
+stw t2, TAIL_X(zero)
+stw t3, TAIL_Y(zero)
+
+slli t5, t0, 0x03
+add t5, t5, t1
+slli t5,t5, 0x02
+ldw t5, GSA(t5)  ; t5: direction of the snake's head
+
+addi t4, zero , 0x01
+beq t5, t4, left
+addi t4, zero 0x02
+beq t5,t4, up
+addi t4, zero, 0x03
+beq t5, t4, down
+
+addi t0, t0, 0x01
+addi t2, t2, 0x01
+jmpi collision_test
+
+left: 
+sub t0, t0,t4
+sub t2, t2,t4
+jmpi collision_test
+;end left
+up:
+addi t1,t1, 0x01
+addi t3,t3, 0x01
+jmpi collision_test
+;end up
+down:
+addi t4, zero, 0x01
+sub t1,t1,t4
+sub t3,t3,t4
+jmpi collision_test
+
+collision_test:
+slli t5, t0, 0x03
+addi t5,t5,t1
+slli t5,t5, 0x02	; t5: snake's head new pos
+slli t6, t2, 0x03
+addi t6,t6,t3
+slli t6,t6,0x02    ; t6: snake's tail new pos
+
+
 
 ; END: hit_test
 

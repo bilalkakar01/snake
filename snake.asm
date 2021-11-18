@@ -120,6 +120,25 @@ init_game:
 
 ; BEGIN: create_food
 create_food:
+addi t1, zero,NB_CELLS ; 	t1: contains the value 96 which is the limit of the NB_CELLS
+
+verify_limits: 			; verifies if the random position is in range b/w 0 and 96
+ldw t0, RANDOM_NUM(zero)
+andi t0,t0,0xFF			;	t1: contains a "condidate" position of food
+blt t0,t1, verify_availability 
+jmpi verify_limits
+
+verify_availability:    ; verifies if the cell is available to create "Food"
+ldw t3, GSA(t0)  		; 	t3: contains the value of in GSA(t0)
+beq t3, zero, end
+jmpi verify_limits
+
+end:
+addi t4, zero, FOOD
+stw t4,GSA(t0)
+
+
+
 
 ; END: create_food
 

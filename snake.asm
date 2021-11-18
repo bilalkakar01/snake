@@ -157,7 +157,7 @@ ldw t5, GSA(t5)  ; t5: direction of the snake's head
 
 addi t4, zero , 0x01
 beq t5, t4, left
-addi t4, zero 0x02
+addi t4, zero, 0x02
 beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
@@ -183,12 +183,7 @@ sub t3,t3,t4
 jmpi collision_test
 
 collision_test:
-slli t5, t0, 0x03
-addi t5,t5,t1
-slli t5,t5, 0x02	; t5: snake's head new pos
-slli t6, t2, 0x03
-addi t6,t6,t3
-slli t6,t6,0x02    ; t6: snake's tail new pos
+
 
 
 

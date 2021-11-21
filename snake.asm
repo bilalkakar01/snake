@@ -191,6 +191,7 @@ blt t1, zero, game_over
 
 game_over:
 addi v0, zero, RET_COLLISION
+score_increment:
 
 
 ; END: hit_test

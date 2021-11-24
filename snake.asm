@@ -43,7 +43,6 @@
 .equ    ARG_HUNGRY,     0       ; a0 argument for move_snake when food wasn't eaten
 .equ    ARG_FED,        1       ; a0 argument for move_snake when food was eaten
 
-
 ; initialize stack pointer
 addi    sp, zero, LEDS
 
@@ -61,12 +60,11 @@ stw zero, TAIL_Y(zero)
 addi t0, zero, 4
 stw t0, GSA(zero)
 main:
-call set_pixel
 call clear_leds
-call get_input
-call move_snake
 call draw_array
+call move_snake
 jmpi main
+
 
 
 ; BEGIN: clear_leds
@@ -141,7 +139,6 @@ jmpi verify_limits
 end:
 addi t4, zero, FOOD
 stw t4,GSA(t0)
-
 ; END: create_food
 
 
@@ -164,39 +161,29 @@ beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
 
-addi t0, t0, 0x01   	; t0: head_x
-addi t2, t2, 0x01	  	; t2:tail_x
+addi t0, t0, 0x01
+addi t2, t2, 0x01
 jmpi collision_test
 
 left: 
-sub t0, t0,t4			; t0: head_x
-sub t2, t2,t4			; t2: tail_X
+sub t0, t0,t4
+sub t2, t2,t4
 jmpi collision_test
 ;end left
 up:
-addi t1,t1, 0x01		; t1: head_y
-addi t3,t3, 0x01		; t3: tail_y
+addi t1,t1, 0x01
+addi t3,t3, 0x01
 jmpi collision_test
 ;end up
 down:
 addi t4, zero, 0x01
-sub t1,t1,t4			; t1: head_y
-sub t3,t3,t4			; t3: tail_y
+sub t1,t1,t4
+sub t3,t3,t4
 jmpi collision_test
 
 collision_test:
 
-addi t5, zero, NB_ROWS
-addi t6, zero, NB_COLS
-bge t0, t5, game_over
-blt t0, zero, game_over
-bge t1, t6, game_over
-blt t1, zero, game_over
 
-
-game_over:
-addi v0, zero, RET_COLLISION
-score_increment:
 
 
 ; END: hit_test
@@ -316,41 +303,43 @@ beq t3,t4, upwards
 addi t4, zero, 0x03
 beq t3, t4, downwards
 	;if rightward
-addi t0, t0, 0x01
-addi t6, t6,0x01  ; t6: tail_x
-
-addi t4, zero, 0x01
-jmpi update
+jmpi rightwards
 
 update:
-
 ; update the new head pos in GSA
 slli t5, t0, 0x03 ; t0: head_x
 add t5, t5, t2 ; t5: new position of snake's head, t2: head_y
 slli t5, t5, 0x02
 stw t3, GSA(t5)
+stw t0, HEAD_X(zero)
+stw t2, HEAD_Y(zero) 
 ; update the new tail pos in GSA
-slli t5, t6, 0x03 ; t5: new pos of snake tail, t6: tail_x
-add t5, t5,t7  ;  t7: tail_y
-slli t5,t5,0x02
-stw t3, GSA(t5)
+stw t6, TAIL_X(zero)
+stw t7, TAIL_Y(zero)
 ret
 
 leftwards:
+addi t4, zero, 0x01
 sub t0, t0,t4   ; t0 : head_x of the snake
 sub t6, t6, t4 ; t6: tail_x
 jmpi update
  
 
 upwards:
-addi t2, t2, 0x02 ; t2: head_y of the snake
-addi t7, t7, 0x01 ; t7: tail_y
+addi t4, zero, 0x01
+sub t2, t2, t4 ; t2: head_y of the snake
+sub t7, t7, t4 ; t7: tail_y
 jmpi update
 
 
 downwards:
 sub t2, t2,t4
 sub t7, t7, t4
+jmpi update
+
+rightwards:
+addi t0, t0, 0x01 ; t0 : head_x
+addi t6, t6, 0x01  ; t6: tail_x
 jmpi update
 
 

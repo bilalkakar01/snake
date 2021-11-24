@@ -61,9 +61,8 @@ addi t0, zero, 4
 stw t0, GSA(zero)
 addi t0, zero, 48
 stw t0, SCORE(zero)
+
 main:
-call display_score
-break
 call clear_leds
 call create_food
 call draw_array
@@ -172,6 +171,7 @@ jmpi verify_limits
 end:
 addi t4, zero, FOOD
 stw t4,GSA(t7)
+ret
 ; END: create_food
 
 
@@ -179,8 +179,9 @@ stw t4,GSA(t7)
 hit_test:
 stw t0, HEAD_X(zero)
 stw t1, HEAD_Y(zero)
-stw t2, TAIL_X(zero)
-stw t3, TAIL_Y(zero)
+
+addi t6, zero, NB_ROWS ; number of rows 8
+addi t7, zero, NB_COLS; number of cols 12
 
 slli t5, t0, 0x03
 add t5, t5, t1
@@ -194,31 +195,60 @@ beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
 
-addi t0, t0, 0x01
-addi t2, t2, 0x01
-jmpi collision_test
+addi t4, zero, 0x04
+beq t5,t4, right
 
+
+right:
+addi t4, zero, 0x0B
+beq t0, t4, game_over   ; t0: Head_x
+addi t0,t0, 0x01
+jmpi food_or_collsion
+		 
 left: 
+beq t0,zero, game_over
+addi t4, zero, 0x01
 sub t0, t0,t4
-sub t2, t2,t4
-jmpi collision_test
+jmpi food_or_collsion
 ;end left
+
 up:
-addi t1,t1, 0x01
-addi t3,t3, 0x01
-jmpi collision_test
-;end up
-down:
+beq t1, zero, game_over
 addi t4, zero, 0x01
 sub t1,t1,t4
-sub t3,t3,t4
-jmpi collision_test
+jmpi food_or_collsion
+;end up
+down:
+addi t4, zero, 0x07
+beq t1, t4, game_over
+addi t1,t1, 0x01
+jmpi food_or_collsion
 
-collision_test:
+game_over:
+addi v0, zero, 0x02
 
+score_increment:
+addi v0, zero, 0x01
 
+no_collision:
+add v0, zero,zero
 
+food_or_collsion:
+slli t2, t0, 0x03
+add t2,t2,t1
+slli t2,t2,0x02     ; t2: new pos of snake's head
+ldw t3, GSA(t2)  ; t3: the value of GSA(t2)
 
+beq t3,zero, no_collision
+addi t4, zero, FOOD
+beq t3,t4, score_increment
+blt t3,t4, lowerBound_check
+
+lowerBound_check:
+addi t4, zero, 0x01
+bge t3, t4, game_over
+
+ret
 ; END: hit_test
 
 

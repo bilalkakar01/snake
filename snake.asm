@@ -333,8 +333,8 @@ jmpi update
 
 
 downwards:
-sub t2, t2,t4
-sub t7, t7, t4
+addi t2, t2,0x01
+addi t7, t7, 0x01
 jmpi update
 
 rightwards:

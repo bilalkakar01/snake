@@ -142,9 +142,6 @@ end:
 addi t4, zero, FOOD
 stw t4,GSA(t0)
 
-
-
-
 ; END: create_food
 
 
@@ -167,29 +164,39 @@ beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
 
-addi t0, t0, 0x01
-addi t2, t2, 0x01
+addi t0, t0, 0x01   	; t0: head_x
+addi t2, t2, 0x01	  	; t2:tail_x
 jmpi collision_test
 
 left: 
-sub t0, t0,t4
-sub t2, t2,t4
+sub t0, t0,t4			; t0: head_x
+sub t2, t2,t4			; t2: tail_X
 jmpi collision_test
 ;end left
 up:
-addi t1,t1, 0x01
-addi t3,t3, 0x01
+addi t1,t1, 0x01		; t1: head_y
+addi t3,t3, 0x01		; t3: tail_y
 jmpi collision_test
 ;end up
 down:
 addi t4, zero, 0x01
-sub t1,t1,t4
-sub t3,t3,t4
+sub t1,t1,t4			; t1: head_y
+sub t3,t3,t4			; t3: tail_y
 jmpi collision_test
 
 collision_test:
 
+addi t5, zero, NB_ROWS
+addi t6, zero, NB_COLS
+bge t0, t5, game_over
+blt t0, zero, game_over
+bge t1, t6, game_over
+blt t1, zero, game_over
 
+
+game_over:
+addi v0, zero, RET_COLLISION
+score_increment:
 
 
 ; END: hit_test

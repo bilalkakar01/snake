@@ -53,22 +53,28 @@ addi    sp, zero, LEDS
 ;
 ; return values
 ;     This procedure should never return.
+; TODO: Finish this procedure.
+stw zero, HEAD_X(zero)
+stw zero, HEAD_Y(zero)
+stw zero, TAIL_X(zero)
+stw zero, TAIL_Y(zero)
+addi t0, zero, 4
+stw t0, GSA(zero)
 main:
-call clear_leds
-addi a0, zero, 0x09
-addi a1, zero, 0x07
 call set_pixel
-    ; TODO: Finish this procedure.
-
-    ret
+call clear_leds
+call get_input
+call move_snake
+call draw_array
+jmpi main
 
 
 ; BEGIN: clear_leds
 clear_leds:
 
-stw zero, LEDS(t0)
-stw zero, (LEDS+4)(t0)
-stw zero, (LEDS+8)(t0)
+stw zero, LEDS(zero)
+stw zero, (LEDS+4)(zero)
+stw zero, (LEDS+8)(zero)
 ret
 
 ; END: clear_leds
@@ -101,7 +107,6 @@ set_pixel_0:
 	ldw t3, (LEDS)(zero)
 	or t3, t3, t2
 	stw t3, (LEDS)(zero)
-	ret
 	ret
 ; END: set_pixel
 
@@ -261,7 +266,27 @@ snake_head_right:
 
 ; BEGIN: draw_array
 draw_array:
-
+	addi t4, zero, 0 ; initialize a counter
+	addi t5, zero, 384 ; end value of the for loop
+	loop_draw_array: ; start of the for loop
+	beq t4, t5, end_loop_draw_array ; end condition of the for loop
+	ldw t6, (GSA)(t4) ; load value of GSA in t6
+	bne t6, zero, call_set_pixel ; if the element is not zero, set pixel
+	addi t4, t4, 4 ; add 4 to the counter
+	jmpi loop_draw_array ; go at the top of the loop
+	end_loop_draw_array:
+	ret ; return to where the procedure was called
+	call_set_pixel:
+	add t6, zero, t4 ; store counter's value in t6
+	srli t6, t6, 2 ; divide GSA index by 4
+	andi a1, t6, 7 ; compute t6 mod 8 to get y and store it in a1
+	sub t6, t6, a1 ; subtract y to t6
+	srli a0, t6, 3 ; divide by 8 to get x and store it in a0
+	add t7, zero, ra ; store ra in t7 before calling set_pixel procedure
+	call set_pixel ; call the set_pixel procedure
+	add ra, zero, t7 ; store back ra's old value
+	addi t4, t4, 4 ; add 4 to the counter
+	jmpi loop_draw_array ; go to the top of the loop
 ; END: draw_array
 
 
@@ -302,6 +327,7 @@ slli t5, t6, 0x03 ; t5: new pos of snake tail, t6: tail_x
 add t5, t5,t7  ;  t7: tail_y
 slli t5,t5,0x02
 stw t3, GSA(t5)
+ret
 
 leftwards:
 sub t0, t0,t4   ; t0 : head_x of the snake

@@ -59,13 +59,11 @@ stw zero, TAIL_X(zero)
 stw zero, TAIL_Y(zero)
 addi t0, zero, 4
 stw t0, GSA(zero)
+addi t0, zero, 48
+stw t0, SCORE(zero)
 main:
-call clear_leds
-call get_input
-call move_snake
-call draw_array
-jmpi main
-
+call display_score
+break
 
 
 ; BEGIN: clear_leds
@@ -114,10 +112,31 @@ set_pixel_0:
 display_score:
 	ldw t0, digit_map(zero) ; load number 0 LED representation in t0
 	stw t0, SEVEN_SEGS(zero) ; store 0 LED representation in first seven seg display
-	stw t0, (SEVEN_SEGS + 4)(zero) ;store 0 LED representation in second seven seg display
+	stw t0, (SEVEN_SEGS + 4)(zero) ; store 0 LED representation in second seven seg display
 	ldw t1, SCORE(zero) ; load score in t1
-	andi t2, t1, 0x0A ; compute the unit number
-
+	add t2, t1, zero ; store score in t2
+	addi t4, zero, 0x0A ; t4 contains value 10
+	mod10_loop: ; compute the unit digit (score mod 10) and store it in t2
+	bge t4, t2, end_mod10_loop ; check if t2 is smaller than 10
+	sub t2, t2, t4 ; subtract 10 to t2
+	jmpi mod10_loop ; go to the top of the loop
+	end_mod10_loop:
+	sub t1, t1, t2 ; subtract the unit digit to the score
+	addi t3, zero, 0 ; initialize t3 to 0 (t3 will be the tens digit)
+	addi t5, zero, 1 ; initialize t5 to be 1
+	divBy10_loop: ; divide t3 by 10 to get tens digit
+	beq zero, t1, end_divBy10_loop ; loop ends when score is 0
+	sub t1, t1, t4 ; subtract 10 to the score
+	add t3, t3, t5 ; add 1 to the tens number
+	jmpi divBy10_loop ; go to the top of the loop
+	end_divBy10_loop:
+	slli t3, t3, 0x02 ; multiply t3 by 4
+	ldw t3, (digit_map)(t3) ; load tens number LED representation in t3
+	stw t3, (SEVEN_SEGS + 8)(zero) ; store tens number LED representation in third seven seg display
+	slli t2, t2, 0x02 ; multiply t2 by 4
+	ldw t2, (digit_map)(t2) ; load unit number LED representation in t2
+	stw t2, (SEVEN_SEGS + 12)(zero) ; store unit number LED representation in fourth seven seg display
+	ret
 ; END: display_score
 
 

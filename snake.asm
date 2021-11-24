@@ -112,6 +112,11 @@ set_pixel_0:
 
 ; BEGIN: display_score
 display_score:
+	ldw t0, digit_map(zero) ; load number 0 LED representation in t0
+	stw t0, SEVEN_SEGS(zero) ; store 0 LED representation in first seven seg display
+	stw t0, (SEVEN_SEGS + 4)(zero) ;store 0 LED representation in second seven seg display
+	ldw t1, SCORE(zero) ; load score in t1
+	andi t2, t1, 0x0A ; compute the unit number
 
 ; END: display_score
 
@@ -368,3 +373,15 @@ restore_checkpoint:
 blink_score:
 
 ; END: blink_score
+
+digit_map:
+.word 0xFC ; 0
+.word 0x60 ; 1
+.word 0xDA ; 2
+.word 0xF2 ; 3
+.word 0x66 ; 4
+.word 0xB6 ; 5
+.word 0xBE ; 6
+.word 0xE0 ; 7
+.word 0xFE ; 8
+.word 0xF6 ; 9

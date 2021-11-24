@@ -61,8 +61,9 @@ addi t0, zero, 4
 stw t0, GSA(zero)
 main:
 call clear_leds
-call draw_array
+call get_input
 call move_snake
+call draw_array
 jmpi main
 
 
@@ -286,11 +287,15 @@ draw_array:
 
 ; BEGIN: move_snake
 move_snake:
-stw t0, HEAD_X(zero) ; store the Head_x in t0
-stw t2, HEAD_Y(zero) ; store the head_y in t2
-stw t6, TAIL_X(zero); t6: tail_x
-stw t7, TAIL_Y(zero); t7: tail_y
-	;get the head direction vector from GSA 
+ldw t0, HEAD_X(zero) ; store the Head_x in t0
+ldw t2, HEAD_Y(zero) ; store the head_y in t2
+ldw t6, TAIL_X(zero); t6: tail_x
+ldw t7, TAIL_Y(zero); t7: tail_y
+; get tail's position in GSA
+slli t1, t6, 0x03
+add t1, t1, t7
+slli t1, t1, 0x02
+;get the head direction vector from GSA 
 slli t3,t0, 0x03
 add t3,t3,t2
 slli t3, t3, 0x02
@@ -314,6 +319,7 @@ stw t3, GSA(t5)
 stw t0, HEAD_X(zero)
 stw t2, HEAD_Y(zero) 
 ; update the new tail pos in GSA
+stw zero, GSA(t1)
 stw t6, TAIL_X(zero)
 stw t7, TAIL_Y(zero)
 ret
@@ -333,8 +339,8 @@ jmpi update
 
 
 downwards:
-sub t2, t2,t4
-sub t7, t7, t4
+addi t2, t2, 0x01
+addi t7, t7, 0x01
 jmpi update
 
 rightwards:

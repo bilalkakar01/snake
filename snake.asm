@@ -61,9 +61,17 @@ addi t0, zero, 4
 stw t0, GSA(zero)
 addi t0, zero, 48
 stw t0, SCORE(zero)
+
 main:
 call display_score
 break
+call clear_leds
+call get_input
+call move_snake
+call draw_array
+jmpi main
+
+
 
 ; BEGIN: clear_leds
 clear_leds:
@@ -160,12 +168,13 @@ verify_availability:    ; verifies if the cell is available to create "Food"
 slli t7, t0, 0x02
 add t7,t7,t0
 ldw t3, GSA(t7)  		; 	t3: contains the value of in GSA(t0)
-beq t3, zero, end
+beq t3, zero, update_food
 jmpi verify_limits
 
-end:
+update_food:
 addi t4, zero, FOOD
 stw t4,GSA(t7)
+ret
 ; END: create_food
 
 
@@ -173,8 +182,9 @@ stw t4,GSA(t7)
 hit_test:
 stw t0, HEAD_X(zero)
 stw t1, HEAD_Y(zero)
-stw t2, TAIL_X(zero)
-stw t3, TAIL_Y(zero)
+
+addi t6, zero, NB_ROWS ; number of rows 8
+addi t7, zero, NB_COLS; number of cols 12
 
 slli t5, t0, 0x03
 add t5, t5, t1
@@ -188,31 +198,61 @@ beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
 
-addi t0, t0, 0x01
-addi t2, t2, 0x01
-jmpi collision_test
+addi t4, zero, 0x04
+beq t5,t4, right
 
+
+right:
+addi t4, zero, 0x0B
+beq t0, t4, game_over   ; t0: Head_x
+addi t0,t0, 0x01
+jmpi food_or_collsion
+		 
 left: 
+beq t0,zero, game_over
+addi t4, zero, 0x01
 sub t0, t0,t4
-sub t2, t2,t4
-jmpi collision_test
+jmpi food_or_collsion
 ;end left
+
 up:
-addi t1,t1, 0x01
-addi t3,t3, 0x01
-jmpi collision_test
-;end up
-down:
+beq t1, zero, game_over
 addi t4, zero, 0x01
 sub t1,t1,t4
-sub t3,t3,t4
-jmpi collision_test
+jmpi food_or_collsion
+;end up
+down:
+addi t4, zero, 0x07
+beq t1, t4, game_over
+addi t1,t1, 0x01
+jmpi food_or_collsion
 
-collision_test:
+game_over:
+addi v0, zero, 0x02
+ret
 
+score_increment:
+addi v0, zero, 0x01
+ret
+no_collision:
+add v0, zero,zero
+ret
 
+food_or_collsion:
+slli t2, t0, 0x03
+add t2,t2,t1
+slli t2,t2,0x02     ; t2: new pos of snake's head
+ldw t3, GSA(t2)  ; t3: the value of GSA(t2)
 
+beq t3,zero, no_collision
+addi t4, zero, FOOD
+beq t3,t4, score_increment
+blt t3,t4, lowerBound_check
 
+lowerBound_check:
+addi t4, zero, 0x01
+bge t3, t4, game_over
+ret
 ; END: hit_test
 
 
@@ -313,67 +353,98 @@ draw_array:
 
 ; BEGIN: move_snake
 move_snake:
-ldw t0, HEAD_X(zero) ; store the Head_x in t0
-ldw t2, HEAD_Y(zero) ; store the head_y in t2
-ldw t6, TAIL_X(zero); t6: tail_x
-ldw t7, TAIL_Y(zero); t7: tail_y
+ldw t0, HEAD_X(zero) 	;	t0: head_x
+ldw t1, HEAD_Y(zero) 	;	t1: head_y
+ldw t2, TAIL_X(zero)	; 	t2: tail_x
+ldw t3, TAIL_Y(zero)	; 	t3: tail_y
+
 ; get tail's position in GSA
-slli t1, t6, 0x03
-add t1, t1, t7
-slli t1, t1, 0x02
+slli t4, t2, 0x03
+add t4, t4, t3
+slli t4, t4, 0x02
+ldw t4, GSA(t4) 		;	t4: directon of snake_tail
+	
 ;get the head direction vector from GSA 
-slli t3,t0, 0x03
-add t3,t3,t2
-slli t3, t3, 0x02
-ldw t3, GSA(t3) ; t3: direction of snake's head
-	;compare if the direction is leftward,upward,downward or rightward
-addi t4, zero, 0x01
-beq t3,t4, leftwards
-addi t4, zero, 0x02
-beq t3,t4, upwards
-addi t4, zero, 0x03
-beq t3, t4, downwards
-	;if rightward
-jmpi rightwards
+slli t5,t0, 0x03
+add t5,t5,t1
+slli t5, t5, 0x02
+ldw t5, GSA(t5) 		;	t5: direction of snake's head
+
+;compare if the direction is leftward,upward,downward or rightward
+addi t6, zero, 0x01
+beq t5,t6, head_leftwards		;	t5: head direction
+addi t6, zero, 0x02
+beq t5,t6, head_upwards
+addi t6, zero, 0x03
+beq t5, t6, head_downwards
+
+jmpi head_rightwards
 
 update:
 ; update the new head pos in GSA
-slli t5, t0, 0x03 ; t0: head_x
-add t5, t5, t2 ; t5: new position of snake's head, t2: head_y
-slli t5, t5, 0x02
-stw t3, GSA(t5)
-stw t0, HEAD_X(zero)
-stw t2, HEAD_Y(zero) 
+slli t7, t0, 0x03			; t0: head_x
+add t7, t7, t1 
+slli t7, t7, 0x02		   	; new position of snake head
+stw t5, GSA(t7)				; t5: direction of snake's head
+stw t0, HEAD_X(zero)		
+stw t1, HEAD_Y(zero) 
 ; update the new tail pos in GSA
-stw zero, GSA(t1)
-stw t6, TAIL_X(zero)
-stw t7, TAIL_Y(zero)
+stw t2, TAIL_X(zero)
+stw t3, TAIL_Y(zero)
 ret
 
-leftwards:
-addi t4, zero, 0x01
-sub t0, t0,t4   ; t0 : head_x of the snake
-sub t6, t6, t4 ; t6: tail_x
-jmpi update
- 
+head_leftwards:
+addi t7, zero, 0x01
+sub t0, t0,t7   		;	t0 : head_x of the snake
+jmpi new_tail_pos 
 
-upwards:
-addi t4, zero, 0x01
-sub t2, t2, t4 ; t2: head_y of the snake
-sub t7, t7, t4 ; t7: tail_y
-jmpi update
+head_upwards:
+addi t7, zero, 0x01
+sub t1, t1, t7 			;	t1: head_y of the snake
+jmpi new_tail_pos
 
 
-downwards:
-addi t2, t2, 0x01
-addi t7, t7, 0x01
-jmpi update
+head_downwards:
+addi t1, t1, 0x01		;	t1: head_y	
+jmpi new_tail_pos
 
-rightwards:
+head_rightwards:
 addi t0, t0, 0x01 ; t0 : head_x
-addi t6, t6, 0x01  ; t6: tail_x
+jmpi new_tail_pos
+
+new_tail_pos:
+slli t7, t2, 0x03
+add t7,t7,t3
+slli t7,t7,0x02
+
+addi t6, zero, 0x01
+beq t4,t6, tail_leftward		;	t5: head direction
+addi t6, zero, 0x02
+beq t4,t6, tail_upward
+addi t6, zero, 0x03
+beq t4, t6, tail_downward
+addi t6, zero, 0x04
+beq t4, t6, tail_rightward
+
+tail_rightward:
+stw zero, GSA(t7)
+addi t2,t2,0x01
 jmpi update
 
+tail_leftward:
+stw zero, GSA(t7)
+addi t2,t2, -1
+jmpi update
+
+tail_upward:
+stw zero, GSA(t7)
+addi t3,t3,-1
+jmpi update
+
+tail_downward:
+stw zero, GSA(t7)
+addi t3,t3,0x01
+jmpi update
 
 ; END: move_snake
 

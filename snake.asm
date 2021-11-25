@@ -64,12 +64,6 @@ stw t0, SCORE(zero)
 main:
 call display_score
 break
-call clear_leds
-call create_food
-call draw_array
-jmpi main
-
-
 
 ; BEGIN: clear_leds
 clear_leds:

@@ -250,7 +250,6 @@ blt t3,t4, lowerBound_check
 lowerBound_check:
 addi t4, zero, 0x01
 bge t3, t4, game_over
-ret
 ; END: hit_test
 
 

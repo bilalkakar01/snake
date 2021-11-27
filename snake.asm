@@ -63,8 +63,6 @@ addi t0, zero, 48
 stw t0, SCORE(zero)
 
 main:
-call display_score
-break
 call clear_leds
 call get_input
 call move_snake
@@ -462,7 +460,13 @@ restore_checkpoint:
 
 ; BEGIN: blink_score
 blink_score:
-
+	stw zero, SEVEN_SEGS(zero) ; clear first seven seg display
+	stw zero, (SEVEN_SEGS + 4)(zero) ; clear second seven seg display
+	stw zero, (SEVEN_SEGS + 8)(zero) ; clear third seven seg display
+	stw zero, (SEVEN_SEGS + 12)(zero) ; clear fourth seven seg display
+	call wait ; wait for some time
+	call display_score ; display the score
+	ret
 ; END: blink_score
 
 digit_map:

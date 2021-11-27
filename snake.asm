@@ -65,9 +65,20 @@ stw t0, SCORE(zero)
 main:
 call clear_leds
 call get_input
+addi t7, zero, 1
+bne v1,t7, create_food
+call hit_test
+addi t0, zero, 2
+beq v0, t0, endGame
+addi t0, zero, 1
+beq v0,t0, create_food 
 call move_snake
 call draw_array
+
 jmpi main
+
+endGame:
+Break
 
 
 
@@ -80,7 +91,6 @@ stw zero, (LEDS+8)(zero)
 ret
 
 ; END: clear_leds
-
 
 ; BEGIN: set_pixel
 set_pixel:
@@ -178,8 +188,8 @@ ret
 
 ; BEGIN: hit_test
 hit_test:
-stw t0, HEAD_X(zero)
-stw t1, HEAD_Y(zero)
+ldw t0, HEAD_X(zero)
+ldw t1, HEAD_Y(zero)
 
 addi t6, zero, NB_ROWS ; number of rows 8
 addi t7, zero, NB_COLS; number of cols 12
@@ -195,7 +205,6 @@ addi t4, zero, 0x02
 beq t5,t4, up
 addi t4, zero, 0x03
 beq t5, t4, down
-
 addi t4, zero, 0x04
 beq t5,t4, right
 

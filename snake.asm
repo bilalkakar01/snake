@@ -157,6 +157,33 @@ display_score:
 
 ; BEGIN: init_game
 init_game:
+;make the GSA empty
+loop_empty_GSA:
+addi t1, zero, NB_CELLS
+add t2, zero, zero	; t2: counter
+stw zero, GSA(t2)
+addi t2,t2,1
+blt t2, t1,loop_empty_GSA ; t1: number of cells 96
+
+;set snake's position to (0,0)
+stw zero, HEAD_X(zero)
+stw zero, HEAD_Y(zero)
+stw zero, TAIL_X(zero)
+stw zero, TAIL_Y(zero)
+
+;set the direction of snake's head to the right
+addi t0, zero, DIR_RIGHT
+stw t0, GSA(zero)
+
+;set score to zero
+ldw t0, digit_map(zero) 			; load number 0 LED representation in t0
+stw t0, SEVEN_SEGS(zero) 			; store 0 LED representation in first seven seg display
+stw t0, (SEVEN_SEGS + 4)(zero) 		; store 0 LED representation in second seven seg display
+stw t0, (SEVEN_SEGS + 8)(zero) 		; store 0 LED representation in third seven seg display
+stw t0, (SEVEN_SEGS + 12)(zero)	; store 0 LED representation in fourth seven seg display
+
+call create_food
+ret
 
 ; END: init_game
 

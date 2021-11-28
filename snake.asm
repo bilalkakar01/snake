@@ -157,33 +157,6 @@ display_score:
 
 ; BEGIN: init_game
 init_game:
-;make the GSA empty
-loop_empty_GSA:
-addi t1, zero, NB_CELLS
-add t2, zero, zero	; t2: counter
-stw zero, GSA(t2)
-addi t2,t2,1
-blt t2, t1,loop_empty_GSA ; t1: number of cells 96
-
-;set snake's position to (0,0)
-stw zero, HEAD_X(zero)
-stw zero, HEAD_Y(zero)
-stw zero, TAIL_X(zero)
-stw zero, TAIL_Y(zero)
-
-;set the direction of snake's head to the right
-addi t0, zero, DIR_RIGHT
-stw t0, GSA(zero)
-
-;set score to zero
-ldw t0, digit_map(zero) 			; load number 0 LED representation in t0
-stw t0, SEVEN_SEGS(zero) 			; store 0 LED representation in first seven seg display
-stw t0, (SEVEN_SEGS + 4)(zero) 		; store 0 LED representation in second seven seg display
-stw t0, (SEVEN_SEGS + 8)(zero) 		; store 0 LED representation in third seven seg display
-stw t0, (SEVEN_SEGS + 12)(zero)	; store 0 LED representation in fourth seven seg display
-
-call create_food
-ret
 
 ; END: init_game
 
@@ -496,8 +469,26 @@ restore_checkpoint:
 
 ; BEGIN: blink_score
 blink_score:
-
+	stw zero, SEVEN_SEGS(zero) ; clear first seven seg display
+	stw zero, (SEVEN_SEGS + 4)(zero) ; clear second seven seg display
+	stw zero, (SEVEN_SEGS + 8)(zero) ; clear third seven seg display
+	stw zero, (SEVEN_SEGS + 12)(zero) ; clear fourth seven seg display
+	call wait ; wait for some time
+	call display_score ; display the score
+	ret
 ; END: blink_score
+
+; BEGIN: wait
+wait:
+	addi t0, zero, 10000 ; initialize a counter to 10000
+	addi t1, zero, 1 ; initialize t1 to 1
+	loop_wait:
+	beq t0, zero, end_loop_wait ; end condition of the loop
+	sub t0, t0, t1 ; decrement the counter by 1
+	jmpi loop_wait ; go to the top of the loop
+	end_loop_wait:
+	ret ; go back to where the wait procedure was called
+;END: wait
 
 digit_map:
 .word 0xFC ; 0

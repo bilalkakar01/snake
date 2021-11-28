@@ -478,6 +478,18 @@ blink_score:
 	ret
 ; END: blink_score
 
+; BEGIN: wait
+wait:
+	addi t0, zero, 10000 ; initialize a counter to 10000
+	addi t1, zero, 1 ; initialize t1 to 1
+	loop_wait:
+	beq t0, zero, end_loop_wait ; end condition of the loop
+	sub t0, t0, t1 ; decrement the counter by 1
+	jmpi loop_wait ; go to the top of the loop
+	end_loop_wait:
+	ret ; go back to where the wait procedure was called
+;END: wait
+
 digit_map:
 .word 0xFC ; 0
 .word 0x60 ; 1

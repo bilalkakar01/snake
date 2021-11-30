@@ -71,9 +71,11 @@ call clear_leds
 jmpi main
 
 snake_ate_food:
+addi a0, zero, 1
 ldw t1, SCORE(zero)
 addi t1, t1, 1
 stw t1, SCORE(zero)
+call display_score
 call create_food
 jmpi main_after_food
 
@@ -105,16 +107,22 @@ set_pixel_2:
 	ldw t3, (LEDS+0x0008)(zero)
 	or t3, t3, t2
 	stw t3, (LEDS+0x0008)(zero)
+	addi a0, zero, 0
+	addi a1, zero, 0
 	ret
 set_pixel_1:
 	ldw t3, (LEDS+0x0004)(zero)
 	or t3, t3, t2
 	stw t3, (LEDS+0x0004)(zero)
+	addi a0, zero, 0
+	addi a1, zero, 0
 	ret
 set_pixel_0:
 	ldw t3, (LEDS)(zero)
 	or t3, t3, t2
 	stw t3, (LEDS)(zero)
+	addi a0, zero, 0
+	addi a1, zero, 0
 	ret
 ; END: set_pixel
 
@@ -128,7 +136,7 @@ display_score:
 	add t2, t1, zero ; store score in t2
 	addi t4, zero, 0x0A ; t4 contains value 10
 	mod10_loop: ; compute the unit digit (score mod 10) and store it in t2
-	bge t4, t2, end_mod10_loop ; check if t2 is smaller than 10
+	blt t2, t4, end_mod10_loop ; check if t2 is strictly smaller than 10
 	sub t2, t2, t4 ; subtract 10 to t2
 	jmpi mod10_loop ; go to the top of the loop
 	end_mod10_loop:
@@ -153,11 +161,16 @@ display_score:
 
 ; BEGIN: init_game
 init_game:
+; clear the leds
+add t2, zero, ra
+call clear_leds
+add ra , zero, t2
 ;make the GSA empty
 addi t1, zero, NB_CELLS
 add t2, zero, zero	; t2: counter
 loop_empty_GSA:
-stw zero, GSA(t2)
+slli t3, t2, 2
+stw zero, GSA(t3)
 addi t2,t2,1
 blt t2, t1,loop_empty_GSA ; t1: number of cells 96
 
@@ -177,6 +190,7 @@ stw t0, SEVEN_SEGS(zero) 			; store 0 LED representation in first seven seg disp
 stw t0, (SEVEN_SEGS + 4)(zero) 		; store 0 LED representation in second seven seg display
 stw t0, (SEVEN_SEGS + 8)(zero) 		; store 0 LED representation in third seven seg display
 stw t0, (SEVEN_SEGS + 12)(zero)	; store 0 LED representation in fourth seven seg display
+stw zero, SCORE(zero)				; set score in memory to zero
 
 add t2, zero, ra
 call create_food
@@ -422,6 +436,8 @@ stw t1, HEAD_Y(zero)
 ; update the new tail pos in GSA
 stw t2, TAIL_X(zero)
 stw t3, TAIL_Y(zero)
+; put a0 back to 0
+addi a0, zero, 0
 ret
 
 head_leftwards:
@@ -502,15 +518,17 @@ blink_score:
 	stw zero, (SEVEN_SEGS + 4)(zero) ; clear second seven seg display
 	stw zero, (SEVEN_SEGS + 8)(zero) ; clear third seven seg display
 	stw zero, (SEVEN_SEGS + 12)(zero) ; clear fourth seven seg display
+	add t7, zero, ra
 	call wait ; wait for some time
 	call display_score ; display the score
+	add ra, zero, t7
 	ret
 ; END: blink_score
 
 ; BEGIN: wait
 wait:
-	addi t0, zero, 8138 ; initialize a counter to 10000
-	slli t0, t0, 10
+	addi t0, zero, 6000 ; initialize a counter to 10000
+	slli t0, t0, 9
 	addi t1, zero, 1 ; initialize t1 to 1
 	loop_wait:
 	beq t0, zero, end_loop_wait ; end condition of the loop

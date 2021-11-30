@@ -502,7 +502,34 @@ jmpi update
 
 ; BEGIN: save_checkpoint
 save_checkpoint:
-
+	ldw t0, SCORE(zero) ; load score in t0
+	addi t2, zero, 10 ; initialize t2 to 10
+	mod10_save_checkpoint_loop: ; compute the score mod 10 and store it in t0
+	blt t0, t2, end_mod10_save_checkpoint_loop ; check if t0 is strictly smaller than 10
+	sub t0, t0, t2 ; subtract 10 to t2
+	jmpi mod10_save_checkpoint_loop ; go to the top of the loop
+	end_mod10_save_checkpoint_loop:
+	bne t0, zero, end_save_checkpoint ; check if t0 is 0 (this means that the score is a multiple of 10), if not go to the end of the procedure
+	addi t1, zero, 1 ; initialize t1 to 1
+	stw t1, CP_VALID(zero) ; set CP_VALID to 1
+	addi t0, zero, 0 ; initialize t0 to 0 to use it as a counter
+	addi t2, zero, 384 ; intitalize t2 to 384, the end value of the loop
+	save_GSA: ; loop to save the current GSA in memory
+	beq t0, t2, end_save_GSA ; check if the loop should end
+	ldw t3, GSA(t0) ; load the element of the current GSA in t3
+	stw t3, CP_GSA(t0) ; store this element in memory
+	end_save_GSA:
+	ldw t3, HEAD_X(zero) ; load HEAD_X in t3
+	stw t3, CP_HEAD_X(zero) ; store HEAD_X in memory
+	ldw t3, HEAD_Y(zero) ; load HEAD_Y in t3
+	stw t3, CP_HEAD_Y(zero) ; store HEAD_Y in memory
+	ldw t3, TAIL_X(zero) ; load TAIL_X in t3
+	stw t3, CP_TAIL_X(zero) ; store CP_TAIL_X in memory
+	ldw t3, TAIL_Y(zero) ; load TAIL_Y in t3
+	stw t3, CP_TAIL_Y(zero) ; store CP_TAIL_Y in memory
+	addi v0, zero, 1 ; set v0 to 1 because a checkpoint was created
+	end_save_checkpoint:
+	ret
 ; END: save_checkpoint
 
 

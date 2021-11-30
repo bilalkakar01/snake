@@ -54,12 +54,27 @@ addi    sp, zero, LEDS
 ;     This procedure should never return.
 ; TODO: Finish this procedure.
 
+stw zero, CP_VALID(zero)
 start_new_game:
 call init_game
 main:
+call clear_leds
 call draw_array
 call wait
+checkpoint_not_valid:
 call get_input
+addi t0, zero, 5
+beq v0, t0, checkpoint_button_pressed
+jmpi checkpoint_button_not_pressed
+checkpoint_button_pressed:
+call restore_checkpoint
+addi t0, zero, 1
+beq v0, t0, checkpoint_valid
+jmpi checkpoint_not_valid
+checkpoint_valid:
+jmpi main
+call blink_score
+checkpoint_button_not_pressed:
 call hit_test
 addi t0, zero, 1
 beq v0, t0, snake_ate_food
@@ -67,7 +82,6 @@ main_after_food:
 addi t0, zero, 2
 beq v0, t0, start_new_game
 call move_snake
-call clear_leds
 jmpi main
 
 snake_ate_food:
@@ -77,6 +91,12 @@ addi t1, t1, 1
 stw t1, SCORE(zero)
 call display_score
 call create_food
+call save_checkpoint
+addi t0, zero, 1
+beq v0, t0, checkpoint_was_saved
+jmpi main_after_food
+checkpoint_was_saved:
+call blink_score
 jmpi main_after_food
 
 

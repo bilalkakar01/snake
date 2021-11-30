@@ -67,6 +67,7 @@ main_after_food:
 addi t0, zero, 2
 beq v0, t0, start_new_game
 call move_snake
+call clear_leds
 jmpi main
 
 snake_ate_food:

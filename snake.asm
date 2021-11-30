@@ -427,21 +427,25 @@ ret
 head_leftwards:
 addi t7, zero, 0x01
 sub t0, t0,t7   		;	t0 : head_x of the snake
-jmpi new_tail_pos 
+beq a0, zero, new_tail_pos
+jmpi update
 
 head_upwards:
 addi t7, zero, 0x01
 sub t1, t1, t7 			;	t1: head_y of the snake
-jmpi new_tail_pos
+beq a0, zero, new_tail_pos
+jmpi update
 
 
 head_downwards:
 addi t1, t1, 0x01		;	t1: head_y	
-jmpi new_tail_pos
+beq a0, zero, new_tail_pos
+jmpi update
 
 head_rightwards:
 addi t0, t0, 0x01 ; t0 : head_x
-jmpi new_tail_pos
+beq a0, zero, new_tail_pos
+jmpi update
 
 new_tail_pos:
 slli t7, t2, 0x03

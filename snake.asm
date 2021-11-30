@@ -60,20 +60,24 @@ call init_game
 main:
 call clear_leds
 call draw_array
-call wait
+
 checkpoint_not_valid:
+call wait
 call get_input
 addi t0, zero, 5
 beq v0, t0, checkpoint_button_pressed
 jmpi checkpoint_button_not_pressed
+
 checkpoint_button_pressed:
 call restore_checkpoint
 addi t0, zero, 1
 beq v0, t0, checkpoint_valid
 jmpi checkpoint_not_valid
+
 checkpoint_valid:
-jmpi main
 call blink_score
+jmpi main
+
 checkpoint_button_not_pressed:
 call hit_test
 addi t0, zero, 1
@@ -533,11 +537,13 @@ save_checkpoint:
 	addi t1, zero, 1 ; initialize t1 to 1
 	stw t1, CP_VALID(zero) ; set CP_VALID to 1
 	addi t0, zero, 0 ; initialize t0 to 0 to use it as a counter
-	addi t2, zero, 384 ; intitalize t2 to 384, the end value of the loop
+	addi t2, zero, NB_CELLS ; intitalize t2 to 384, the end value of the loop
 	save_GSA: ; loop to save the current GSA in memory
 	beq t0, t2, end_save_GSA ; check if the loop should end
+	slli t0,t0,2
 	ldw t3, GSA(t0) ; load the element of the current GSA in t3
 	stw t3, CP_GSA(t0) ; store this element in memory
+	addi t0,t0,1
 	end_save_GSA:
 	ldw t3, HEAD_X(zero) ; load HEAD_X in t3
 	stw t3, CP_HEAD_X(zero) ; store HEAD_X in memory
@@ -548,19 +554,22 @@ save_checkpoint:
 	ldw t3, TAIL_Y(zero) ; load TAIL_Y in t3
 	stw t3, CP_TAIL_Y(zero) ; store CP_TAIL_Y in memory
 	addi v0, zero, 1 ; set v0 to 1 because a checkpoint was created
+	ret
 	end_save_checkpoint:
+	add v0,zero,zero
 	ret
 ; END: save_checkpoint
 
 
 ; BEGIN: restore_checkpoint
 restore_checkpoint:
-addi t7, zero, NB_CELLS ; t7: number of cells
-add t6, zero, zero ; t6: counter
-
 ldw t0, CP_VALID(zero)
 addi t1, zero, 1
 bne t0, t1, not_valid_checkpoint
+beq t0,t1, valid
+valid:
+addi t7, zero, NB_CELLS ; t7: number of cells
+add t6, zero, zero ; t6: counter
 addi v0, zero, 1
 ;copy from CP_GSA
 loop_for_copy:
@@ -580,7 +589,7 @@ ldw t4, CP_TAIL_Y(zero)
 stw t4, TAIL_Y(zero)
 ldw t4, CP_SCORE(zero)
 stw t4, SCORE(zero)
-
+ret
 not_valid_checkpoint:
 add v0, zero,zero
 ret

@@ -508,6 +508,36 @@ save_checkpoint:
 
 ; BEGIN: restore_checkpoint
 restore_checkpoint:
+addi t7, zero, NB_CELLS ; t7: number of cells
+add t6, zero, zero ; t6: counter
+
+ldw t0, CP_VALID(zero)
+addi t1, zero, 1
+bne t0, t1, not_valid_checkpoint
+addi v0, zero, 1
+;copy from CP_GSA
+loop_for_copy:
+slli t6,t6, 2
+ldw t3, CP_GSA(t6)
+stw t3, GSA(t6)
+addi t6,t6,1
+blt t6,t7, loop_for_copy
+
+ldw t4, CP_HEAD_X(zero)
+stw t4, HEAD_X(zero)
+ldw t4, CP_HEAD_Y(zero)
+stw t4, HEAD_Y(zero)
+ldw t4, CP_TAIL_X(zero)
+stw t4, TAIL_X(zero)
+ldw t4, CP_TAIL_Y(zero)
+stw t4, TAIL_Y(zero)
+ldw t4, CP_SCORE(zero)
+stw t4, SCORE(zero)
+
+not_valid_checkpoint:
+add v0, zero,zero
+ret
+
 
 ; END: restore_checkpoint
 

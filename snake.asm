@@ -53,33 +53,28 @@ addi    sp, zero, LEDS
 ; return values
 ;     This procedure should never return.
 ; TODO: Finish this procedure.
-stw zero, HEAD_X(zero)
-stw zero, HEAD_Y(zero)
-stw zero, TAIL_X(zero)
-stw zero, TAIL_Y(zero)
-addi t0, zero, 4
-stw t0, GSA(zero)
-addi t0, zero, 48
-stw t0, SCORE(zero)
 
+start_new_game:
+call init_game
 main:
-call clear_leds
-call get_input
-addi t7, zero, 1
-bne v1,t7, create_food
-call hit_test
-addi t0, zero, 2
-beq v0, t0, endGame
-addi t0, zero, 1
-beq v0,t0, create_food 
-call move_snake
 call draw_array
-
+call wait
+call get_input
+call hit_test
+addi t0, zero, 1
+beq v0, t0, snake_ate_food
+main_after_food:
+addi t0, zero, 2
+beq v0, t0, start_new_game
+call move_snake
 jmpi main
 
-endGame:
-Break
-
+snake_ate_food:
+ldw t1, SCORE(zero)
+addi t1, t1, 1
+stw t1, SCORE(zero)
+call create_food
+jmpi main_after_food
 
 
 ; BEGIN: clear_leds
@@ -158,9 +153,9 @@ display_score:
 ; BEGIN: init_game
 init_game:
 ;make the GSA empty
-loop_empty_GSA:
 addi t1, zero, NB_CELLS
 add t2, zero, zero	; t2: counter
+loop_empty_GSA:
 stw zero, GSA(t2)
 addi t2,t2,1
 blt t2, t1,loop_empty_GSA ; t1: number of cells 96
@@ -182,7 +177,9 @@ stw t0, (SEVEN_SEGS + 4)(zero) 		; store 0 LED representation in second seven se
 stw t0, (SEVEN_SEGS + 8)(zero) 		; store 0 LED representation in third seven seg display
 stw t0, (SEVEN_SEGS + 12)(zero)	; store 0 LED representation in fourth seven seg display
 
+add t2, zero, ra
 call create_food
+add ra , zero, t2
 ret
 
 ; END: init_game
@@ -507,7 +504,8 @@ blink_score:
 
 ; BEGIN: wait
 wait:
-	addi t0, zero, 10000 ; initialize a counter to 10000
+	addi t0, zero, 8138 ; initialize a counter to 10000
+	slli t0, t0, 10
 	addi t1, zero, 1 ; initialize t1 to 1
 	loop_wait:
 	beq t0, zero, end_loop_wait ; end condition of the loop

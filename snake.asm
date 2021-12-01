@@ -60,9 +60,8 @@ call init_game
 main:
 call clear_leds
 call draw_array
-
-checkpoint_not_valid:
 call wait
+checkpoint_not_valid:
 call get_input
 addi t0, zero, 5
 beq v0, t0, checkpoint_button_pressed
@@ -82,10 +81,10 @@ checkpoint_button_not_pressed:
 call hit_test
 addi t0, zero, 1
 beq v0, t0, snake_ate_food
+call move_snake
 main_after_food:
 addi t0, zero, 2
 beq v0, t0, start_new_game
-call move_snake
 jmpi main
 
 snake_ate_food:
@@ -95,6 +94,7 @@ addi t1, t1, 1
 stw t1, SCORE(zero)
 call display_score
 call create_food
+call move_snake
 call save_checkpoint
 addi t0, zero, 1
 beq v0, t0, checkpoint_was_saved
@@ -186,9 +186,11 @@ display_score:
 ; BEGIN: init_game
 init_game:
 ; clear the leds
-add t2, zero, ra
+addi sp, sp, -4
+stw ra, 0(sp)
 call clear_leds
-add ra , zero, t2
+ldw ra, 0(sp)
+addi sp, sp, 4
 ;make the GSA empty
 addi t1, zero, NB_CELLS
 add t2, zero, zero	; t2: counter
@@ -209,16 +211,26 @@ addi t0, zero, DIR_RIGHT
 stw t0, GSA(zero)
 
 ;set score to zero
-ldw t0, digit_map(zero) 			; load number 0 LED representation in t0
-stw t0, SEVEN_SEGS(zero) 			; store 0 LED representation in first seven seg display
-stw t0, (SEVEN_SEGS + 4)(zero) 		; store 0 LED representation in second seven seg display
-stw t0, (SEVEN_SEGS + 8)(zero) 		; store 0 LED representation in third seven seg display
-stw t0, (SEVEN_SEGS + 12)(zero)	; store 0 LED representation in fourth seven seg display
-stw zero, SCORE(zero)				; set score in memory to zero
+stw zero, SCORE(zero) ; set score in memory to zero
+addi sp, sp, -4
+stw ra, 0(sp)
+call display_score
+ldw ra, 0(sp)
+addi sp, sp, 4
 
-add t2, zero, ra
+; create food
+addi sp, sp, -4
+stw ra, 0(sp)
 call create_food
-add ra , zero, t2
+ldw ra, 0(sp)
+addi sp, sp, 4
+
+; draw array
+addi sp, sp, -4
+stw ra, 0(sp)
+call draw_array
+ldw ra, 0(sp)
+addi sp, sp, 4
 ret
 
 ; END: init_game
@@ -229,7 +241,7 @@ create_food:
 addi t1, zero,NB_CELLS ; 	t1: contains the value 96 which is the limit of the NB_CELLS
 
 verify_limits: 			; verifies if the random position is in range b/w 0 and 96
-ldw t0, RANDOM_NUM(t5)
+ldw t0, RANDOM_NUM(zero)
 andi t0,t0,0xFF			;	t1: contains a "condidate" position of food
 bge t0,t1,verify_limits
 blt t0,t1, verify_availability 
@@ -237,7 +249,6 @@ blt t0,t1, verify_availability
 
 verify_availability:    ; verifies if the cell is available to create "Food"
 slli t7, t0, 0x02
-add t7,t7,t0
 ldw t3, GSA(t7)  		; 	t3: contains the value of in GSA(t0)
 beq t3, zero, update_food
 jmpi verify_limits
@@ -412,9 +423,11 @@ draw_array:
 	andi a1, t6, 7 ; compute t6 mod 8 to get y and store it in a1
 	sub t6, t6, a1 ; subtract y to t6
 	srli a0, t6, 3 ; divide by 8 to get x and store it in a0
-	add t7, zero, ra ; store ra in t7 before calling set_pixel procedure
+	addi sp, sp, -4
+	stw ra, 0(sp)
 	call set_pixel ; call the set_pixel procedure
-	add ra, zero, t7 ; store back ra's old value
+	ldw ra, 0(sp)
+	addi sp, sp, 4
 	addi t4, t4, 4 ; add 4 to the counter
 	jmpi loop_draw_array ; go to the top of the loop
 ; END: draw_array
@@ -527,6 +540,7 @@ jmpi update
 ; BEGIN: save_checkpoint
 save_checkpoint:
 	ldw t0, SCORE(zero) ; load score in t0
+	add t5, zero, t0 ; store score in t5
 	addi t2, zero, 10 ; initialize t2 to 10
 	mod10_save_checkpoint_loop: ; compute the score mod 10 and store it in t0
 	blt t0, t2, end_mod10_save_checkpoint_loop ; check if t0 is strictly smaller than 10
@@ -537,13 +551,14 @@ save_checkpoint:
 	addi t1, zero, 1 ; initialize t1 to 1
 	stw t1, CP_VALID(zero) ; set CP_VALID to 1
 	addi t0, zero, 0 ; initialize t0 to 0 to use it as a counter
-	addi t2, zero, NB_CELLS ; intitalize t2 to 384, the end value of the loop
+	addi t2, zero, NB_CELLS ; intitalize t2 to 96, the end value of the loop
 	save_GSA: ; loop to save the current GSA in memory
 	beq t0, t2, end_save_GSA ; check if the loop should end
-	slli t0,t0,2
-	ldw t3, GSA(t0) ; load the element of the current GSA in t3
-	stw t3, CP_GSA(t0) ; store this element in memory
+	slli t4,t0,2 
+	ldw t3, GSA(t4) ; load the element of the current GSA in t3
+	stw t3, CP_GSA(t4) ; store this element in memory
 	addi t0,t0,1
+	jmpi save_GSA
 	end_save_GSA:
 	ldw t3, HEAD_X(zero) ; load HEAD_X in t3
 	stw t3, CP_HEAD_X(zero) ; store HEAD_X in memory
@@ -553,6 +568,7 @@ save_checkpoint:
 	stw t3, CP_TAIL_X(zero) ; store CP_TAIL_X in memory
 	ldw t3, TAIL_Y(zero) ; load TAIL_Y in t3
 	stw t3, CP_TAIL_Y(zero) ; store CP_TAIL_Y in memory
+	stw t5, CP_SCORE(zero) ; save score in memory
 	addi v0, zero, 1 ; set v0 to 1 because a checkpoint was created
 	ret
 	end_save_checkpoint:
@@ -566,16 +582,14 @@ restore_checkpoint:
 ldw t0, CP_VALID(zero)
 addi t1, zero, 1
 bne t0, t1, not_valid_checkpoint
-beq t0,t1, valid
-valid:
 addi t7, zero, NB_CELLS ; t7: number of cells
 add t6, zero, zero ; t6: counter
 addi v0, zero, 1
 ;copy from CP_GSA
 loop_for_copy:
-slli t6,t6, 2
-ldw t3, CP_GSA(t6)
-stw t3, GSA(t6)
+slli t5,t6, 2
+ldw t3, CP_GSA(t5)
+stw t3, GSA(t5)
 addi t6,t6,1
 blt t6,t7, loop_for_copy
 
@@ -604,16 +618,18 @@ blink_score:
 	stw zero, (SEVEN_SEGS + 4)(zero) ; clear second seven seg display
 	stw zero, (SEVEN_SEGS + 8)(zero) ; clear third seven seg display
 	stw zero, (SEVEN_SEGS + 12)(zero) ; clear fourth seven seg display
-	add t7, zero, ra
+	addi sp, sp, -4
+	stw ra, 0(sp)
 	call wait ; wait for some time
 	call display_score ; display the score
-	add ra, zero, t7
+	ldw ra, 0(sp)
+	addi sp, sp, 4
 	ret
 ; END: blink_score
 
 ; BEGIN: wait
 wait:
-	addi t0, zero, 6000 ; initialize a counter to 10000
+	addi t0, zero, 6000 ; initialize a counter to 6000
 	slli t0, t0, 9
 	addi t1, zero, 1 ; initialize t1 to 1
 	loop_wait:
